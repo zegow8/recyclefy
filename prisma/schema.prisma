@@ -1,0 +1,277 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 1. USER
+// ==========================================
+model User {
+  id              String    @id @default(uuid())
+  nama            String
+  email           String    @unique
+  noHp            String    @unique
+  alamat          String?
+  password        String
+  role            Role      @default(USER)
+  koin            Int       @default(0)
+  fotoProfile     String?
+  wilayahId       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  wilayah         Wilayah?          @relation(fields: [wilayahId], references: [id])
+  laporanSampah   LaporanSampah[]
+  transaksiBeli   TransaksiPembelian[]
+  kirimanAdmin    KirimanAdmin[]
+  barangProduksi  BarangDaurUlang[]
+  riwayatKoin     RiwayatKoin[]
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+// ==========================================
+// 2. WILAYAH
+// ==========================================
+model Wilayah {
+  id              String    @id @default(uuid())
+  namaWilayah     String    @unique
+  createdAt       DateTime  @default(now())
+
+  users           User[]
+  laporanSampah   LaporanSampah[]
+  kirimanAdmin    KirimanAdmin[]
+  barangDaurUlang BarangDaurUlang[]
+
+  @@map("wilayah")
+}
+
+// ==========================================
+// 3. JENIS SAMPAH
+// ==========================================
+model JenisSampah {
+  id              String    @id @default(uuid())
+  namaJenis       String    @unique
+  gambarUrl       String?
+  beratPerUnit    Float?
+  poinPerUnit     Int       @default(0)
+  deskripsi       String?
+  createdAt       DateTime  @default(now())
+
+  laporanSampah   LaporanSampah[]
+  bahanBakuResep  BahanBakuResep[]
+
+  @@map("jenis_sampah")
+}
+
+// ==========================================
+// 4. LAPORAN SAMPAH
+// ==========================================
+model LaporanSampah {
+  id              String    @id @default(uuid())
+  berat           Float
+  tanggalLapor    DateTime  @default(now())
+  userId          String
+  jenisSampahId   String
+  wilayahId       String
+  koinDiberikan   Int       @default(0)
+  kuantitas       Int       @default(1)
+  status          StatusLaporan @default(MENUNGGU)
+
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jenisSampah     JenisSampah    @relation(fields: [jenisSampahId], references: [id], onDelete: Restrict)
+  wilayah         Wilayah        @relation(fields: [wilayahId], references: [id], onDelete: Restrict)
+  fotoSampah      FotoSampah?
+
+  @@map("laporan_sampah")
+}
+
+enum StatusLaporan {
+  MENUNGGU
+  DIPROSES
+  SELESAI
+}
+
+// ==========================================
+// 5. FOTO SAMPAH
+// ==========================================
+model FotoSampah {
+  id              String    @id @default(uuid())
+  imageUrl        String
+  laporanId       String    @unique
+
+  laporan         LaporanSampah @relation(fields: [laporanId], references: [id], onDelete: Cascade)
+
+  @@map("foto_sampah") 
+}
+
+// ==========================================
+// 6. RESEP DAUR ULANG
+// ==========================================
+model ResepDaurUlang {
+  id              String    @id @default(uuid())
+  namaBarang      String
+  deskripsi       String?
+  gambarBarang    String?
+  hargaKoin       Int
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  bahanBaku       BahanBakuResep[]
+  barangDaurUlang BarangDaurUlang[]
+  stokBarang      StokBarang?
+  transaksiBeli   TransaksiPembelian[]
+
+  @@map("resep_daur_ulang")
+}
+
+// ==========================================
+// 7. BAHAN BAKU RESEP
+// ==========================================
+model BahanBakuResep {
+  id              String    @id @default(uuid())
+  resepId         String
+  jenisSampahId   String
+  jumlah          Int
+
+  resep           ResepDaurUlang @relation(fields: [resepId], references: [id], onDelete: Cascade)
+  jenisSampah     JenisSampah    @relation(fields: [jenisSampahId], references: [id], onDelete: Restrict)
+
+  @@unique([resepId, jenisSampahId])
+  @@map("bahan_baku_resep")
+}
+
+// ==========================================
+// 8. BARANG DAUR ULANG
+// ==========================================
+model BarangDaurUlang {
+  id              String    @id @default(uuid())
+  resepId         String
+  adminId         String
+  wilayahId       String
+  jumlah          Int       @default(1)
+  tanggalProduksi DateTime  @default(now())
+  statusKirim     StatusKirim @default(MENUNGGU)
+
+  resep           ResepDaurUlang @relation(fields: [resepId], references: [id], onDelete: Restrict)
+  admin           User           @relation(fields: [adminId], references: [id], onDelete: Restrict)
+  wilayah         Wilayah        @relation(fields: [wilayahId], references: [id], onDelete: Restrict)
+  barangKiriman   BarangKiriman[]
+
+  @@map("barang_daur_ulang")
+}
+
+enum StatusKirim {
+  MENUNGGU
+  DIKIRIM
+  DITERIMA
+}
+
+// ==========================================
+// 9. KIRIMAN ADMIN
+// ==========================================
+model KirimanAdmin {
+  id              String    @id @default(uuid())
+  adminId         String
+  wilayahId       String
+  tanggalKirim    DateTime  @default(now())
+  tanggalKonfirmasi DateTime?
+  status          StatusKiriman @default(MENUNGGU_KONFIRMASI)
+  catatan         String?
+  catatanSuper    String?
+
+  admin           User           @relation(fields: [adminId], references: [id], onDelete: Restrict)
+  wilayah         Wilayah        @relation(fields: [wilayahId], references: [id], onDelete: Restrict)
+  barangKiriman   BarangKiriman[]
+
+  @@map("kiriman_admin")
+}
+
+enum StatusKiriman {
+  MENUNGGU_KONFIRMASI
+  DISETUJUI
+  DITOLAK
+}
+
+// ==========================================
+// 10. BARANG KIRIMAN
+// ==========================================
+model BarangKiriman {
+  id                 String    @id @default(uuid())
+  kirimanId          String
+  barangDaurUlangId  String
+  jumlah             Int
+
+  kirimanAdmin       KirimanAdmin   @relation(fields: [kirimanId], references: [id], onDelete: Cascade)
+  barangDaurUlang    BarangDaurUlang @relation(fields: [barangDaurUlangId], references: [id], onDelete: Restrict)
+
+  @@map("barang_kiriman")
+}
+
+// ==========================================
+// 11. STOK BARANG
+// ==========================================
+model StokBarang {
+  id              String    @id @default(uuid())
+  resepId         String    @unique
+  jumlahStok      Int       @default(0)
+  updatedAt       DateTime  @updatedAt
+
+  resep           ResepDaurUlang @relation(fields: [resepId], references: [id], onDelete: Restrict)
+
+  @@map("stok_barang")
+}
+
+// ==========================================
+// 12. TRANSAKSI PEMBELIAN
+// ==========================================
+model TransaksiPembelian {
+  id              String    @id @default(uuid())
+  userId          String
+  resepId         String
+  jumlah          Int
+  totalKoin       Int
+  status          StatusTransaksi @default(DIPESAN)
+  tanggalBeli     DateTime  @default(now())
+  tanggalUpdate   DateTime  @updatedAt
+  alamatKirim     String?
+  noHpPenerima    String?
+  namaPenerima    String?
+
+  user            User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  resep           ResepDaurUlang @relation(fields: [resepId], references: [id], onDelete: Restrict)
+
+  @@map("transaksi_pembelian")
+}
+
+enum StatusTransaksi {
+  DIPESAN
+  DIKIRIM
+  SELESAI
+  DIBATALKAN
+}
+
+// ==========================================
+// 13. RIWAYAT KOIN
+// ==========================================
+model RiwayatKoin {
+  id              String    @id @default(uuid())
+  userId          String
+  jumlah          Int
+  keterangan      String
+  tanggal         DateTime  @default(now())
+
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("riwayat_koin")
+}
