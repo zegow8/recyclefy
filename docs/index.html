@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recyclefy - Platform Pengelolaan Sampah</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ==================== NAVBAR ==================== -->
+  <nav class="navbar" id="navbar">
+    <div class="navbar-container">
+      <div class="navbar-brand">
+        <h1>Recycle<span>fy</span></h1>
+      </div>
+      <div class="navbar-menu" id="navbar-menu">
+        <!-- Menu diisi otomatis oleh JS -->
+      </div>
+      <div class="navbar-user">
+        <span class="badge-koin" id="badge-koin">🪙 0</span>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ==================== KONTEN ==================== -->
+  <main class="main-content" id="main-content">
+    <!-- Konten diisi otomatis oleh JS -->
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-section">
+        <h2 class="footer-brand">Recycle<span>fy</span></h2>
+        <p class="footer-desc">Platform pengelolaan sampah berbasis komunitas untuk menciptakan lingkungan yang lebih bersih dan berkelanjutan.</p>
+        <div class="footer-social">
+          <a href="https://wa.me/6281547184307" target="_blank" class="social-link wa">💬 WhatsApp</a>
+          <a href="https://instagram.com/eddlyaa__" target="_blank" class="social-link ig">📸 Instagram</a>
+          <a href="https://github.com/zegow8" target="_blank" class="social-link gh">💻 GitHub</a>
+        </div>
+      </div>
+      <div class="footer-section">
+        <h3 class="footer-title">Menu</h3>
+        <ul class="footer-links">
+          <li><a href="#" onclick="goTo('home-user')">Beranda</a></li>
+          <li><a href="#" onclick="goTo('toko-user')">Toko Barang</a></li>
+          <li><a href="#" onclick="goTo('setor-user')">Setor Sampah</a></li>
+          <li><a href="#" onclick="goTo('riwayat-setor-user')">Riwayat Setor</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h3 class="footer-title">Informasi</h3>
+        <ul class="footer-links">
+          <li><a href="#">Tentang Kami</a></li>
+          <li><a href="#">Cara Kerja</a></li>
+          <li><a href="#">Syarat & Ketentuan</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h3 class="footer-title">Kontak</h3>
+        <div class="footer-contact">
+          <p>📧 recyclefy@email.com</p>
+          <p>📍 Sumur Batu, Jakarta Pusat</p>
+          <p>🕐 Senin - Jumat: 08.00 - 17.00</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Recyclefy. Dibuat dengan ❤️ oleh Eddlya</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
