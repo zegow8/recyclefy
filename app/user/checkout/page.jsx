@@ -1,8 +1,8 @@
 'use client';
 
 import { useSession, signOut } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import Footer from '@/components/layouts/Footer';
 import toast from 'react-hot-toast';
@@ -10,9 +10,9 @@ import toast from 'react-hot-toast';
 function CheckoutContent() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
-
-  const [resepId, setResepId] = useState<string | null>(null);
-  const [jumlah, setJumlah] = useState(1);
+  const searchParams = useSearchParams();
+  const resepId = searchParams.get('resepId');
+  const jumlah = parseInt(searchParams.get('jumlah')) || 1;
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,33 +26,22 @@ function CheckoutContent() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
-      return;
     }
-
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('resepId');
-    const qty = parseInt(params.get('jumlah') || '1');
-
-    if (!id) {
+    if (!resepId) {
       router.push('/user/toko');
-      return;
     }
-
-    setResepId(id);
-    setJumlah(qty);
-  }, [status, router]);
+  }, [status, router, resepId]);
 
   useEffect(() => {
-    if (session?.user && resepId) {
+    if (session?.user) {
       setForm({
         namaPenerima: session.user.name || '',
         noHpPenerima: session.user.noHp || '',
         alamatKirim: session.user.alamat || ''
       });
-
       fetchProduct();
     }
-  }, [session, resepId]);
+  }, [session]);
 
   const fetchProduct = async () => {
     try {
@@ -69,14 +58,12 @@ function CheckoutContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!form.namaPenerima || !form.noHpPenerima || !form.alamatKirim) {
       toast.error('Semua field wajib diisi');
       return;
     }
 
     setSubmitting(true);
-
     try {
       const res = await fetch('/api/user/checkout', {
         method: 'POST',
@@ -91,12 +78,10 @@ function CheckoutContent() {
       });
 
       const result = await res.json();
-
       if (!res.ok) throw new Error(result.message);
 
       toast.success(result.message || 'Pembelian berhasil!');
       await update();
-
       window.location.href = '/user/riwayat-beli';
     } catch (error) {
       toast.error(error.message);
@@ -125,7 +110,6 @@ function CheckoutContent() {
           <div className="navbar-brand">
             <h1>Recycle<span>fy</span></h1>
           </div>
-
           <div className="navbar-menu">
             <Link href="/user/home">Home</Link>
             <Link href="/user/aktivitas">Aktivitas</Link>
@@ -136,14 +120,9 @@ function CheckoutContent() {
             <Link href="/user/riwayat-beli">Riwayat Beli</Link>
             <Link href="/user/profile">Profile</Link>
           </div>
-
           <div className="navbar-user">
             <span className="badge-koin">🪙 {session.user.koin || 0}</span>
-
-            <button
-              onClick={() => signOut({ callbackUrl: '/login' })}
-              className="btn-logout"
-            >
+            <button onClick={() => signOut({ callbackUrl: '/login' })} className="btn-logout">
               Logout
             </button>
           </div>
@@ -153,88 +132,53 @@ function CheckoutContent() {
       <main className="main-content">
         <div className="container">
           <h1 className="page-title">💳 Checkout</h1>
-          <p className="page-subtitle">
-            Konfirmasi pembelian produk daur ulang
-          </p>
+          <p className="page-subtitle">Konfirmasi pembelian produk daur ulang</p>
 
           <div className="checkout-container">
             <div className="checkout-left">
               <div className="product-summary">
                 <div className="product-image">
                   {product.gambarBarang ? (
-                    <img
-                      src={product.gambarBarang}
-                      alt={product.namaBarang}
-                    />
+                    <img src={product.gambarBarang} alt={product.namaBarang} />
                   ) : (
                     <div className="product-placeholder">📦</div>
                   )}
                 </div>
-
                 <div className="product-detail">
                   <h3>{product.namaBarang}</h3>
-                  <p>
-                    {product.deskripsi || 'Produk daur ulang berkualitas'}
-                  </p>
-
-                  <p className="product-price">
-                    🪙 {product.hargaKoin} Poin × {jumlah}
-                  </p>
-
-                  <p className="product-total">
-                    Total: 🪙 {totalHarga}
-                  </p>
-
-                  <p className="product-stock">
-                    Stok: {product.stok} unit
-                  </p>
+                  <p>{product.deskripsi || 'Produk daur ulang berkualitas'}</p>
+                  <p className="product-price">🪙 {product.hargaKoin} Poin × {jumlah}</p>
+                  <p className="product-total">Total: 🪙 {totalHarga}</p>
+                  <p className="product-stock">Stok: {product.stok} unit</p>
                 </div>
               </div>
 
               <form onSubmit={handleSubmit} className="checkout-form">
                 <div className="form-group">
                   <label>Nama Penerima *</label>
-
                   <input
                     type="text"
                     value={form.namaPenerima}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        namaPenerima: e.target.value
-                      })
-                    }
+                    onChange={(e) => setForm({ ...form, namaPenerima: e.target.value })}
                     required
                   />
                 </div>
 
                 <div className="form-group">
                   <label>Nomor Telepon *</label>
-
                   <input
                     type="tel"
                     value={form.noHpPenerima}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        noHpPenerima: e.target.value
-                      })
-                    }
+                    onChange={(e) => setForm({ ...form, noHpPenerima: e.target.value })}
                     required
                   />
                 </div>
 
                 <div className="form-group">
                   <label>Alamat Pengiriman *</label>
-
                   <textarea
                     value={form.alamatKirim}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        alamatKirim: e.target.value
-                      })
-                    }
+                    onChange={(e) => setForm({ ...form, alamatKirim: e.target.value })}
                     required
                     rows={3}
                   />
@@ -245,45 +189,32 @@ function CheckoutContent() {
             <div className="checkout-right">
               <div className="summary-card">
                 <h3>Ringkasan Pesanan</h3>
-
                 <div className="summary-item">
                   <span>Produk</span>
                   <span>{product.namaBarang}</span>
                 </div>
-
                 <div className="summary-item">
                   <span>Jumlah</span>
                   <span>{jumlah} unit</span>
                 </div>
-
                 <div className="summary-item">
                   <span>Harga per unit</span>
                   <span>🪙 {product.hargaKoin}</span>
                 </div>
-
                 <div className="summary-item total">
                   <span>Total</span>
                   <span>🪙 {totalHarga}</span>
                 </div>
-
                 <div className="summary-item">
                   <span>Poin Anda</span>
                   <span>🪙 {session.user.koin}</span>
                 </div>
-
                 <button
                   className="btn-checkout"
                   onClick={handleSubmit}
-                  disabled={
-                    submitting ||
-                    session.user.koin < totalHarga
-                  }
+                  disabled={submitting || session.user.koin < totalHarga}
                 >
-                  {submitting
-                    ? 'Memproses...'
-                    : session.user.koin < totalHarga
-                    ? 'Poin Tidak Cukup'
-                    : 'Konfirmasi Pesanan'}
+                  {submitting ? 'Memproses...' : session.user.koin < totalHarga ? 'Poin Tidak Cukup' : 'Konfirmasi Pesanan'}
                 </button>
               </div>
             </div>
@@ -313,9 +244,7 @@ function CheckoutContent() {
         }
 
         @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
+          to { transform: rotate(360deg); }
         }
 
         .navbar {
@@ -624,5 +553,14 @@ function CheckoutContent() {
 }
 
 export default function CheckoutPage() {
-  return <CheckoutContent />;
+  return (
+    <Suspense fallback={
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>Memuat...</p>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
+  );
 }
