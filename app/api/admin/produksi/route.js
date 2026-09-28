@@ -104,7 +104,7 @@ export async function GET(request) {
       { status: 500 }
     );
   } finally {
-    await prisma.$disconnect();
+    // disconnect removed
   }
 }
 
@@ -238,6 +238,6 @@ export async function POST(request) {
       { status: 500 }
     );
   } finally {
-    await prisma.$disconnect();
+    // disconnect removed
   }
 }

@@ -51,6 +51,6 @@ export async function GET() {
     console.error('Error get kiriman:', error);
     return NextResponse.json([], { status: 200 });
   } finally {
-    await prisma.$disconnect();
+    // disconnect removed
   }
 }

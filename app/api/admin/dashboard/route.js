@@ -193,6 +193,6 @@ export async function GET() {
       topJenisSampah: []
     }, { status: 200 });
   } finally {
-    await prisma.$disconnect();
+    // disconnect removed
   }
 }

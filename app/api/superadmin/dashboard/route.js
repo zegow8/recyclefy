@@ -114,6 +114,6 @@ export async function GET() {
       kirimanPerWilayah: []
     }, { status: 200 });
   } finally {
-    await prisma.$disconnect();
+    // disconnect removed
   }
 }

@@ -129,6 +129,6 @@ export async function GET(request) {
     console.error('Error get riwayat produksi:', error);
     return NextResponse.json([], { status: 200 });
   } finally {
-    await prisma.$disconnect();
+    // disconnect removed
   }
 }
