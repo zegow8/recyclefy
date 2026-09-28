@@ -2,12 +2,12 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 import Footer from '@/components/layouts/Footer';
 import toast from 'react-hot-toast';
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -81,13 +81,8 @@ export default function CheckoutPage() {
       if (!res.ok) throw new Error(result.message);
 
       toast.success(result.message || 'Pembelian berhasil!');
-      
-      // 🔥 UPDATE SESSION
       await update();
-      
-      // 🔥 FORCE RELOAD
       window.location.href = '/user/riwayat-beli';
-      
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -554,5 +549,18 @@ export default function CheckoutPage() {
         }
       `}</style>
     </>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>Memuat...</p>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }
